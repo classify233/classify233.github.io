@@ -4,21 +4,23 @@
   <meta charset="utf-8">
   
   
-  <title>Hadoop解析1：整体架构 | Hexo</title>
+  <title>HDFS1：整体架构 | Hexo</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
   <meta name="description" content="Hadoop HDFS的优缺点HDFS作为大数据的一个通用存储组件，其优点是很多的：  构建成本低：数据节点（DataNode）可以部署在廉价机器上； 高扩展性：可以轻松添加更多的存储节点； 高容错性：HDFS上的数据默认是3副本，当少量机器crash时，不影响数据访问； 高吞吐，适合大数据并行处理； 使用方便：提供了Hadoop Shell和API，方便使用；  HDFS也有很多缺点：  不适合">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Hadoop解析1：整体架构">
-<meta property="og:url" content="http://example.com/2024/05/18/Hadoop%E8%A7%A3%E6%9E%901%EF%BC%9A%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84/index.html">
+<meta property="og:title" content="HDFS1：整体架构">
+<meta property="og:url" content="http://example.com/2024/05/18/HDFS1%EF%BC%9A%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84/index.html">
 <meta property="og:site_name" content="Hexo">
 <meta property="og:description" content="Hadoop HDFS的优缺点HDFS作为大数据的一个通用存储组件，其优点是很多的：  构建成本低：数据节点（DataNode）可以部署在廉价机器上； 高扩展性：可以轻松添加更多的存储节点； 高容错性：HDFS上的数据默认是3副本，当少量机器crash时，不影响数据访问； 高吞吐，适合大数据并行处理； 使用方便：提供了Hadoop Shell和API，方便使用；  HDFS也有很多缺点：  不适合">
 <meta property="og:locale" content="en_US">
-<meta property="og:image" content="http://example.com/imgs/20240518224145.png">
-<meta property="article:published_time" content="2024-05-18T08:57:26.000Z">
-<meta property="article:modified_time" content="2024-05-18T14:44:14.711Z">
+<meta property="og:image" content="http://example.com/.com//20240518224145.jpg">
+<meta property="og:image" content="http://example.com/.com//20240518224649.jpg">
+<meta property="og:image" content="http://example.com/.com//20240518225017.jpg">
+<meta property="article:published_time" content="2024-05-18T15:16:32.000Z">
+<meta property="article:modified_time" content="2024-05-18T15:24:13.347Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://example.com/imgs/20240518224145.png">
+<meta name="twitter:image" content="http://example.com/.com//20240518224145.jpg">
   
     <link rel="alternate" href="/atom.xml" title="Hexo" type="application/atom+xml">
   
@@ -73,10 +75,10 @@
 </header>
 
       <div class="outer">
-        <section id="main"><article id="post-Hadoop解析1：整体架构" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
+        <section id="main"><article id="post-HDFS1：整体架构" class="h-entry article article-type-post" itemprop="blogPost" itemscope itemtype="https://schema.org/BlogPosting">
   <div class="article-meta">
-    <a href="/2024/05/18/Hadoop%E8%A7%A3%E6%9E%901%EF%BC%9A%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84/" class="article-date">
-  <time class="dt-published" datetime="2024-05-18T08:57:26.000Z" itemprop="datePublished">2024-05-18</time>
+    <a href="/2024/05/18/HDFS1%EF%BC%9A%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84/" class="article-date">
+  <time class="dt-published" datetime="2024-05-18T15:16:32.000Z" itemprop="datePublished">2024-05-18</time>
 </a>
     
   </div>
@@ -87,7 +89,7 @@
         
   
     <h1 class="p-name article-title" itemprop="headline name">
-      Hadoop解析1：整体架构
+      HDFS1：整体架构
     </h1>
   
 
@@ -111,14 +113,14 @@
 <li><strong>不适合做低延迟数据访问</strong>；HDFS的特点是吞吐量高，适合大数据离线计算场景；</li>
 <li><strong>存在数据一致性问题</strong>：HDFS存储使用的是3副本的block，多个block之间数据同步需要时间，因此数据写完后，立马去读取，可能出现数据不一致的情况；</li>
 </ol>
-<h2 id="Hadoop-HDFS的架构图"><a href="#Hadoop-HDFS的架构图" class="headerlink" title="Hadoop HDFS的架构图"></a>Hadoop HDFS的架构图</h2><p>HDFS1.0时代，NameNode只有一个，存在<strong>单点问题</strong>（Secondary NameNode只是用来合并editlog，生成新的fsimage checkpoint）；<br><img src="/imgs/20240518224145.png"></p>
-<p>到了HDFS2.0时代，出现了HA架构，为了解决NameNode的单点问题，给Active NameNode部署了一个备用节点，称之为Standby NameNode（3.x版本支持多个Standby NN）；两台NameNode之间通过journal node同步edit log，保证状态的一致性；为了避免Journal Node也出现单点问题，会部署多台Journal Node（一般部署奇数个节点，3个或者5个），多台Journal Node之间通过Paxos协议来保证一致性；</p>
-<p>到了HDFS3.0时代，随着业务的扩展，HDFS集群的文件数量膨胀，单个NameNode无法承担全部元数据的信息；为此需要搭建多个NameNode，由于存在多个NameNode，每一个NameNode的地址（或者Nameservice名字）需要暴露给用户，集群维护起来比较麻烦；例如，数据迁移场景，一个数据需要从Nameservice-1迁移到Nameservice-2，需要业务使用方配合修改在代码中写死的Nameservice名字，整个流程费时又费力；3.0时代出现了Router Based Federation架构，在NameNode前面增加了一个Router组件，由Router根据路由规则Mount Table，把请求发送到正确的NameNode上；</p>
+<h2 id="Hadoop-HDFS的架构图"><a href="#Hadoop-HDFS的架构图" class="headerlink" title="Hadoop HDFS的架构图"></a>Hadoop HDFS的架构图</h2><p>HDFS1.0时代，NameNode只有一个，存在<strong>单点问题</strong>（Secondary NameNode只是用来合并editlog，生成新的fsimage checkpoint）；<br><img src="/.com//20240518224145.jpg" alt="1"></p>
+<p>到了HDFS2.0时代，出现了HA架构，为了解决NameNode的单点问题，给Active NameNode部署了一个备用节点，称之为Standby NameNode（3.x版本支持多个Standby NN）；两台NameNode之间通过journal node同步edit log，保证状态的一致性；为了避免Journal Node也出现单点问题，会部署多台Journal Node（一般部署奇数个节点，3个或者5个），多台Journal Node之间通过Paxos协议来保证一致性；由于两台NameNode的状态是一致的，<br><img src="/.com//20240518224649.jpg" alt="2"></p>
+<p>到了HDFS3.0时代，随着业务的扩展，HDFS集群的文件数量膨胀，单个NameNode无法承担全部元数据的信息；为此需要搭建多个NameNode，由于存在多个NameNode，每一个NameNode的地址（或者Nameservice名字）需要暴露给用户，集群维护起来比较麻烦；例如，数据迁移场景，一个数据需要从Nameservice-1迁移到Nameservice-2，需要业务使用方配合修改在代码中写死的Nameservice名字，整个流程费时又费力；3.0时代出现了Router Based Federation架构，在NameNode前面增加了一个Router组件，由Router根据路由规则Mount Table，把请求发送到正确的NameNode上；<br><img src="/.com//20240518225017.jpg" alt="3"><br>HDFS3.0还增加了新的特性，比如多个Standby NN，进一步提升了集群的可用性；<br>比如支持HDFS Standby Read，提升集群的服务上限；参考(<a target="_blank" rel="noopener" href="https://blog.csdn.net/Androidlushangderen/article/details/113727370">https://blog.csdn.net/Androidlushangderen/article/details/113727370</a>)</p>
 
       
     </div>
     <footer class="article-footer">
-      <a data-url="http://example.com/2024/05/18/Hadoop%E8%A7%A3%E6%9E%901%EF%BC%9A%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84/" data-id="clwbw09m60000vwuc5xemaprh" data-title="Hadoop解析1：整体架构" class="article-share-link"><span class="fa fa-share">Share</span></a>
+      <a data-url="http://example.com/2024/05/18/HDFS1%EF%BC%9A%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84/" data-id="clwc95qgd0000akucex1lcyve" data-title="HDFS1：整体架构" class="article-share-link"><span class="fa fa-share">Share</span></a>
       
       
       
@@ -126,16 +128,6 @@
   </div>
   
     
-<nav id="article-nav">
-  
-  
-    <a href="/2024/05/18/change-first-blog/" id="article-nav-older" class="article-nav-link-wrap">
-      <strong class="article-nav-caption">Older</strong>
-      <div class="article-nav-title">change-first-blog</div>
-    </a>
-  
-</nav>
-
   
 </article>
 
@@ -169,15 +161,7 @@
       <ul>
         
           <li>
-            <a href="/2024/05/18/Hadoop%E8%A7%A3%E6%9E%901%EF%BC%9A%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84/">Hadoop解析1：整体架构</a>
-          </li>
-        
-          <li>
-            <a href="/2024/05/18/change-first-blog/">change-first-blog</a>
-          </li>
-        
-          <li>
-            <a href="/2024/05/18/hello-world/">Hello World</a>
+            <a href="/2024/05/18/HDFS1%EF%BC%9A%E6%95%B4%E4%BD%93%E6%9E%B6%E6%9E%84/">HDFS1：整体架构</a>
           </li>
         
       </ul>
