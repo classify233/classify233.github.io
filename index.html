@@ -91,7 +91,7 @@
     
     <div class="e-content article-entry" itemprop="articleBody">
       
-        <h2 id="Hadoop-HDFS的优缺点"><a href="#Hadoop-HDFS的优缺点" class="headerlink" title="Hadoop HDFS的优缺点"></a>Hadoop HDFS的优缺点</h2><p>Hadoop的HDFS作为大数据的一个统一存储组件，其优点是很多的：</p>
+        <h2 id="Hadoop-HDFS的优缺点"><a href="#Hadoop-HDFS的优缺点" class="headerlink" title="Hadoop HDFS的优缺点"></a>Hadoop HDFS的优缺点</h2><p>HDFS作为大数据的一个通用存储组件，其优点是很多的：</p>
 <ol>
 <li><strong>构建成本低</strong>：数据节点（DataNode）可以部署在廉价机器上；</li>
 <li><strong>高扩展性</strong>：可以轻松添加更多的存储节点；</li>
@@ -107,7 +107,9 @@
 <li><strong>不适合做低延迟数据访问</strong>；HDFS的特点是吞吐量高，适合大数据离线计算场景；</li>
 <li><strong>存在数据一致性问题</strong>：HDFS存储使用的是3副本的block，多个block之间数据同步需要时间，因此数据写完后，立马去读取，可能出现数据不一致的情况；</li>
 </ol>
-<h2 id="Hadoop-HDFS的架构图"><a href="#Hadoop-HDFS的架构图" class="headerlink" title="Hadoop HDFS的架构图"></a>Hadoop HDFS的架构图</h2><p>HDFS1.0时代，NameNode只有一个，存在单点问题</p>
+<h2 id="Hadoop-HDFS的架构图"><a href="#Hadoop-HDFS的架构图" class="headerlink" title="Hadoop HDFS的架构图"></a>Hadoop HDFS的架构图</h2><p>HDFS1.0时代，NameNode只有一个，存在<strong>单点问题</strong>（Secondary NameNode只是用来合并editlog，生成新的fsimage checkpoint）；<br><img src="/imgs/20240518224145.png"></p>
+<p>到了HDFS2.0时代，出现了HA架构，为了解决NameNode的单点问题，给Active NameNode部署了一个备用节点，称之为Standby NameNode（3.x版本支持多个Standby NN）；两台NameNode之间通过journal node同步edit log，保证状态的一致性；为了避免Journal Node也出现单点问题，会部署多台Journal Node（一般部署奇数个节点，3个或者5个），多台Journal Node之间通过Paxos协议来保证一致性；</p>
+<p>到了HDFS3.0时代，随着业务的扩展，HDFS集群的文件数量膨胀，单个NameNode无法承担全部元数据的信息；为此需要搭建多个NameNode，由于存在多个NameNode，每一个NameNode的地址（或者Nameservice名字）需要暴露给用户，集群维护起来比较麻烦；例如，数据迁移场景，一个数据需要从Nameservice-1迁移到Nameservice-2，需要业务使用方配合修改在代码中写死的Nameservice名字，整个流程费时又费力；3.0时代出现了Router Based Federation架构，在NameNode前面增加了一个Router组件，由Router根据路由规则Mount Table，把请求发送到正确的NameNode上；</p>
 
       
     </div>
